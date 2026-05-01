@@ -5,14 +5,18 @@ import { Globe, Crosshair, Radar, Shield } from "lucide-react";
 export const SatelliteFeed: React.FC = () => {
   const [activeNodes, setActiveNodes] = useState<number>(12);
   const [signalStrength, setSignalStrength] = useState<number>(98.4);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
+    setIsReady(true);
     const interval = setInterval(() => {
       setActiveNodes(prev => Math.max(8, Math.min(16, prev + (Math.random() > 0.5 ? 1 : -1))));
       setSignalStrength(prev => Math.max(92, Math.min(100, prev + (Math.random() - 0.5) * 0.2)));
     }, 2000);
     return () => clearInterval(interval);
   }, []);
+
+  if (!isReady) return <div className="w-full h-full bg-black/20 animate-pulse" />;
 
   return (
     <div className="w-full h-full relative flex flex-col p-4 bg-black/20 overflow-hidden">

@@ -10,9 +10,16 @@ interface ParticleSphereProps {
 
 function ParticleSphere({ isSpeaking, isListening }: ParticleSphereProps) {
   const points = useRef<THREE.Points>(null);
+  const [isReady, setIsReady] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsReady(true);
+  }, []);
 
   const particlesCount = 800;
   const [positions, colors] = useMemo(() => {
+    if (typeof window === "undefined") return [new Float32Array(0), new Float32Array(0)];
+    
     const positions = new Float32Array(particlesCount * 3);
     const colors = new Float32Array(particlesCount * 3);
     const color1 = new THREE.Color("#3b82f6"); // Blue
@@ -36,7 +43,7 @@ function ParticleSphere({ isSpeaking, isListening }: ParticleSphereProps) {
   }, []);
 
   useFrame((state) => {
-    if (!points.current) return;
+    if (!isReady || !points.current) return;
     
     const time = state.clock.getElapsedTime();
     points.current.rotation.y = time * 0.2;
@@ -50,6 +57,8 @@ function ParticleSphere({ isSpeaking, isListening }: ParticleSphereProps) {
     
     points.current.scale.set(scale, scale, scale);
   });
+
+  if (!isReady) return null;
 
   return (
     <points ref={points}>

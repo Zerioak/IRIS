@@ -172,20 +172,19 @@ async function startServer() {
     }
   });
 
-  // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
+  // Sir, protocol for production asset serving
+  if (process.env.NODE_ENV === "production") {
+    const distPath = path.resolve(process.cwd(), "dist");
+    app.use(express.static(distPath));
+    app.get("*", (req, res) => {
+      res.sendFile(path.resolve(distPath, "index.html"));
+    });
+  } else {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
     });
     app.use(vite.middlewares);
-  } else {
-    // Sir, protocol for production asset serving
-    const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
   }
 
   // Only listen if not in a serverless environment (sir, respect Vercel/Cloud Run)

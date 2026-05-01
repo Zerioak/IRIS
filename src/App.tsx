@@ -208,7 +208,6 @@ export default function App() {
           },
           systemInstruction: getJarvisInstruction(selectedLanguage.label, memoryString),
           tools: [
-            { googleSearch: {} } as any,
             { functionDeclarations: [saveMemoryTool, manageTasksTool, searchYouTubeTool, openAppTool, printNewsTool, openWebsiteTool] }
           ],
         } as any,
@@ -490,7 +489,6 @@ export default function App() {
         config: {
           systemInstruction: getJarvisInstruction(selectedLanguage.label, memoryString),
           tools: [
-            { googleSearch: {} } as any,
             { functionDeclarations: [saveMemoryTool, manageTasksTool, searchYouTubeTool, openAppTool, printNewsTool, openWebsiteTool] }
           ]
         } as any
