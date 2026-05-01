@@ -31,11 +31,16 @@ interface ChatMessage {
 }
 
 export default function App() {
+  const [isClient, setIsClient] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionState>("disconnected");
   const [interactionStatus, setInteractionStatus] = useState<InteractionState>("idle");
   const [selectedLanguage, setSelectedLanguage] = useState(LANGUAGES[0]);
   const [memories, setMemories] = useState<string[]>([]);
   const [error, setError] = useState<{ message: string; type?: "screen-share" } | null>(null);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [isMicMuted, setIsMicMuted] = useState(false);
@@ -177,7 +182,7 @@ export default function App() {
       setConnectionStatus("connecting");
       setError(null);
 
-      const apiKey = process.env.GEMINI_API_KEY;
+      const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || (typeof process !== "undefined" ? process.env?.GEMINI_API_KEY : null);
       if (!apiKey) {
         throw new Error("API Key is missing.");
       }
@@ -459,7 +464,7 @@ export default function App() {
     addLog("user", "Instruction received: " + userText.substring(0, 30) + "...");
 
     try {
-      const apiKey = process.env.GEMINI_API_KEY;
+      const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || (typeof process !== "undefined" ? process.env?.GEMINI_API_KEY : null);
       if (!apiKey) throw new Error("API Key missing");
       
       const ai = new GoogleGenAI({ apiKey });
@@ -647,6 +652,10 @@ export default function App() {
       }
     }
   };
+
+  if (!isClient) {
+    return <div className="min-h-screen bg-[#050505] flex items-center justify-center text-blue-500 font-mono">INITIALIZING IRIS CORE...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-[#050505] text-[#8ea8c3] flex flex-col font-sans overflow-hidden selection:bg-blue-500/30">

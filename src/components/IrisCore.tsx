@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from "react";
+import React, { useRef, useMemo, useState, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { motion } from "motion/react";
@@ -10,9 +10,9 @@ interface ParticleSphereProps {
 
 function ParticleSphere({ isSpeaking, isListening }: ParticleSphereProps) {
   const points = useRef<THREE.Points>(null);
-  const [isReady, setIsReady] = React.useState(false);
+  const [isReady, setIsReady] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setIsReady(true);
   }, []);
 
@@ -20,26 +20,31 @@ function ParticleSphere({ isSpeaking, isListening }: ParticleSphereProps) {
   const [positions, colors] = useMemo(() => {
     if (typeof window === "undefined") return [new Float32Array(0), new Float32Array(0)];
     
-    const positions = new Float32Array(particlesCount * 3);
-    const colors = new Float32Array(particlesCount * 3);
-    const color1 = new THREE.Color("#3b82f6"); // Blue
-    const color2 = new THREE.Color("#fbbf24"); // Yellow/Amber
+    try {
+      const positions = new Float32Array(particlesCount * 3);
+      const colors = new Float32Array(particlesCount * 3);
+      const color1 = new THREE.Color("#3b82f6"); // Blue
+      const color2 = new THREE.Color("#fbbf24"); // Yellow/Amber
 
-    for (let i = 0; i < particlesCount; i++) {
-      const theta = THREE.MathUtils.randFloat(0, Math.PI * 2);
-      const phi = THREE.MathUtils.randFloat(0, Math.PI);
-      const r = THREE.MathUtils.randFloat(1.8, 2.0);
+      for (let i = 0; i < particlesCount; i++) {
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.random() * Math.PI;
+        const r = 1.8 + Math.random() * 0.2;
 
-      positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-      positions[i * 3 + 2] = r * Math.cos(phi);
+        positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+        positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+        positions[i * 3 + 2] = r * Math.cos(phi);
 
-      const mixedColor = Math.random() > 0.5 ? color1 : color2;
-      colors[i * 3] = mixedColor.r;
-      colors[i * 3 + 1] = mixedColor.g;
-      colors[i * 3 + 2] = mixedColor.b;
+        const mixedColor = Math.random() > 0.5 ? color1 : color2;
+        colors[i * 3] = mixedColor.r;
+        colors[i * 3 + 1] = mixedColor.g;
+        colors[i * 3 + 2] = mixedColor.b;
+      }
+      return [positions, colors];
+    } catch (e) {
+      console.error("Failed to initialize particles", e);
+      return [new Float32Array(0), new Float32Array(0)];
     }
-    return [positions, colors];
   }, []);
 
   useFrame((state) => {
