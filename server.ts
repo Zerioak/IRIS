@@ -190,6 +190,13 @@ async function startServer() {
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`IRIS Server running on http://localhost:${PORT}`);
   });
+
+  return app;
 }
 
-startServer();
+const appPromise = startServer();
+
+export default async (req: any, res: any) => {
+  const app = await appPromise;
+  return app(req, res);
+};
