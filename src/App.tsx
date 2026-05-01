@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { AudioStreamer } from "./lib/audio";
 import { Waveform } from "./components/Waveform";
 import { IrisCore } from "./components/IrisCore";
-import { JARVIS_CONFIG, ConnectionState, InteractionState, LANGUAGES, getJarvisInstruction, saveMemoryTool, internetSearchTool, manageTasksTool, searchYouTubeTool, openAppTool, printNewsTool } from "./constants";
+import { SatelliteFeed } from "./components/SatelliteFeed";
+import { JARVIS_CONFIG, ConnectionState, InteractionState, LANGUAGES, getJarvisInstruction, saveMemoryTool, internetSearchTool, manageTasksTool, searchYouTubeTool, openAppTool, printNewsTool, searchKnowledgeTool } from "./constants";
 
 const openWebsiteTool = {
   name: "openWebsite",
@@ -208,10 +209,10 @@ export default function App() {
           systemInstruction: getJarvisInstruction(selectedLanguage.label, memoryString),
           tools: [
             { googleSearch: {} } as any,
-            { functionDeclarations: [saveMemoryTool, internetSearchTool, manageTasksTool, searchYouTubeTool, openAppTool, printNewsTool] }
+            { functionDeclarations: [saveMemoryTool, internetSearchTool, manageTasksTool, searchYouTubeTool, openAppTool, printNewsTool, searchKnowledgeTool, openWebsiteTool] }
           ],
           toolConfig: { includeServerSideToolInvocations: true } as any,
-        },
+        } as any,
         callbacks: {
           onopen: () => {
             setConnectionStatus("connected");
@@ -295,7 +296,18 @@ export default function App() {
                     id: call.id,
                     response: { result: "Memory updated in cloud matrix." },
                   });
-                } else if (call.name === "internetSearch") {
+                } else if (call.name === "openWebsite") {
+                  const url = (call.args as any).url;
+                  if (typeof url === "string") {
+                    addLog("system", `Opening neural link to: ${url}`);
+                    window.open(url, "_blank");
+                  }
+                  functionResponses.push({
+                    name: call.name,
+                    id: call.id,
+                    response: { result: "Website opened successfully." },
+                  });
+                } else if (call.name === "internetSearch" || call.name === "searchKnowledge") {
                   const queryText = (call.args as any).query;
                   setIsSearching(true);
                   setActiveSearch(queryText);
@@ -498,10 +510,10 @@ export default function App() {
         config: {
           systemInstruction: getJarvisInstruction(selectedLanguage.label, memoryString),
           tools: [
-            { googleSearch: {} },
-            { functionDeclarations: [saveMemoryTool, internetSearchTool, manageTasksTool, searchYouTubeTool, openAppTool, printNewsTool] }
+            { googleSearch: {} } as any,
+            { functionDeclarations: [saveMemoryTool, internetSearchTool, manageTasksTool, searchYouTubeTool, openAppTool, printNewsTool, searchKnowledgeTool, openWebsiteTool] }
           ]
-        }
+        } as any
       });
       const text = response.text || "Communication blackout detected. Check connection.";
 
@@ -666,34 +678,127 @@ export default function App() {
         <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-teal-600/20 rounded-full blur-[150px]" />
       </div>
 
-      {/* Main Grid Layout - Simplified to 2 columns on desktop, 1 on mobile */}
-      <main className="flex-1 flex flex-col lg:grid lg:grid-cols-[1fr_400px] gap-4 p-4 z-10 overflow-hidden">
+      {/* Main Grid Layout */}
+      <main className="flex-1 flex flex-col lg:grid lg:grid-cols-[300px_1fr_400px] lg:grid-rows-[1fr_400px] gap-4 p-4 z-10 overflow-y-auto lg:overflow-hidden">
         
-        {/* Left Column: Media Link (Minimized) */}
-        <div className="hidden lg:flex flex-col gap-4 order-2 lg:order-none opacity-50 hover:opacity-100 transition-opacity">
+        {/* Left Column: Media & Sat-Link */}
+        <div className="flex flex-col gap-4 order-2 lg:order-1">
+          {/* Media Link Panel */}
           <div className="bg-[#0a0f14]/80 border border-[#1e3a5f]/40 rounded-2xl p-4 flex flex-col gap-3 backdrop-blur-md">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Activity className="w-4 h-4 text-blue-400" />
-                <span className="text-[10px] uppercase font-mono tracking-widest text-[#567a9b]">Status Feed</span>
+                <span className="text-[10px] uppercase font-mono tracking-widest text-[#567a9b]">Media Link</span>
+              </div>
+              <div className="flex gap-1">
+                <div className="w-1 h-1 bg-red-500 rounded-full animate-ping" />
+                <div className="w-1 h-1 bg-red-500 rounded-full" />
               </div>
             </div>
-            <div className="aspect-video bg-black/40 rounded-xl border border-white/5 flex items-center justify-center relative overflow-hidden">
-              <span className="text-[9px] font-mono text-white/30 uppercase">Neural Stream Active</span>
+            <div className="aspect-video bg-black/40 rounded-xl border border-white/5 flex items-center justify-center relative overflow-hidden group">
+              {videoStream || screenStream ? (
+                <video 
+                  ref={videoRef} 
+                  autoPlay 
+                  muted 
+                  playsInline 
+                  className={`w-full h-full object-cover ${facingMode === "user" ? "scale-x-[-1]" : ""}`} 
+                />
+              ) : (
+                <>
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.8)_100%)]" />
+                  <Layers className="w-8 h-8 text-white/10 group-hover:text-blue-500/20 transition-colors" />
+                  <span className="text-[10px] font-mono text-white/30 uppercase mt-12 bg-black/40 px-2 py-1 rounded">System Offline</span>
+                </>
+              )}
+              <div className="absolute bottom-2 right-2 flex gap-2">
+                <button onClick={toggleCamera} className="p-1.5 bg-white/5 hover:bg-blue-500/20 rounded-lg transition-colors border border-white/10">
+                  <Video className="w-3.5 h-3.5 text-blue-400" />
+                </button>
+                <button onClick={toggleScreenShare} className="p-1.5 bg-white/5 hover:bg-blue-500/20 rounded-lg transition-colors border border-white/10">
+                  <Monitor className="w-3.5 h-3.5 text-blue-400" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Sat-Link Feed Panel */}
+          <div className="flex-1 bg-[#0a0f14]/80 border border-[#1e3a5f]/40 rounded-2xl p-4 flex flex-col gap-3 backdrop-blur-md relative overflow-hidden">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Globe className="w-4 h-4 text-teal-400" />
+                <span className="text-[10px] uppercase font-mono tracking-widest text-[#567a9b]">Sat-Link Feed</span>
+              </div>
+              <span className="text-[9px] font-mono text-green-500/80 animate-pulse">LIVE FEED // OSCAR-9</span>
+            </div>
+            
+            <div className="flex-1 bg-[#0a0f12] rounded-xl border border-white/5 relative overflow-hidden flex flex-col group">
+              <SatelliteFeed />
+            </div>
+
+            {/* Headlines Section */}
+            <div className="mt-4 flex flex-col gap-3">
+              <div className="flex items-center gap-2 border-b border-white/5 pb-2">
+                <Newspaper className="w-4 h-4 text-blue-400" />
+                <span className="text-[10px] uppercase font-mono tracking-widest text-[#567a9b]">Today Headlines</span>
+              </div>
+              <div className="flex flex-col gap-4 max-h-[150px] overflow-y-auto custom-scrollbar pr-2">
+                {headlines.map((hl, i) => (
+                  <motion.div 
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    key={i} 
+                    className="flex flex-col gap-1 group cursor-default"
+                  >
+                    <h3 className={`text-[10px] font-black leading-tight tracking-wider transition-colors ${hl.priority === 'high' ? 'text-red-500' : 'text-blue-400 group-hover:text-blue-300'}`}>
+                      {hl.title}
+                    </h3>
+                    <p className="text-[9px] text-[#567a9b] leading-relaxed line-clamp-2">
+                      {hl.description}
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
 
 
         {/* Center Section: Core & Visualization */}
-        <div className="flex flex-col gap-4 relative order-1 min-h-[500px]">
+        <div className="flex flex-col gap-4 relative order-1 lg:order-2 min-h-[500px]">
           
           {/* Top Panel: Core Orb Controls */}
-          <div className="flex-1 bg-transparent relative flex flex-col items-center justify-center">
+          <div className="flex-1 bg-transparent relative flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-0">
             
-            {/* Background Connection Lines - Lightened for perf */}
-            <div className="absolute inset-0 z-0 opacity-10 pointer-events-none">
-              <div className="w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-500/20 via-transparent to-transparent pointer-events-none" />
+            {/* Connection Lines (SVG) - Responsive Visibility */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none hidden lg:block">
+              <defs>
+                <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.1" />
+                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.8" />
+                </linearGradient>
+              </defs>
+              <g className="opacity-40">
+                <motion.path d="M 120,180 Q 240,180 350,250" stroke="url(#lineGrad)" strokeWidth="1.5" fill="none" animate={{ strokeDashoffset: [100, 0] }} strokeDasharray="100" transition={{ duration: 3, repeat: Infinity, ease: "linear" }} />
+                <motion.path d="M 120,260 Q 240,260 350,250" stroke="url(#lineGrad)" strokeWidth="1.5" fill="none" animate={{ strokeDashoffset: [100, 0] }} strokeDasharray="100" transition={{ duration: 3, repeat: Infinity, delay: 0.7, ease: "linear" }} />
+                <motion.path d="M 120,340 Q 240,340 350,250" stroke="url(#lineGrad)" strokeWidth="1.5" fill="none" animate={{ strokeDashoffset: [100, 0] }} strokeDasharray="100" transition={{ duration: 3, repeat: Infinity, delay: 1.4, ease: "linear" }} />
+              </g>
+            </svg>
+
+            {/* Interaction Nodes (Left - Responsive) */}
+            <div className="flex lg:flex-col gap-3 lg:gap-4 z-20 lg:absolute lg:left-0 overflow-x-auto lg:overflow-visible w-full lg:w-auto px-4 lg:px-0 no-scrollbar">
+              {[
+                { id: "mem", icon: Database, label: "Memory", color: "text-emerald-500", border: "border-emerald-500/20" },
+                { id: "soul", icon: Zap, label: "Soul", color: "text-purple-400", border: "border-purple-400/20" },
+                { id: "skills", icon: Cpu, label: "Skills", color: "text-blue-400", border: "border-blue-400/20" },
+                { id: "set", icon: Settings, label: "Settings", color: "text-rose-500", border: "border-rose-500/20" }
+              ].map((node) => (
+                <div key={node.id} className={`flex-shrink-0 w-[140px] md:w-[160px] h-12 bg-black/40 border ${node.border} rounded-xl flex items-center gap-3 px-4 backdrop-blur-xl transition-all shadow-sm shadow-black/20`}>
+                  <node.icon className={`w-4 h-4 ${node.color}`} />
+                  <span className="text-[9px] font-mono uppercase tracking-widest text-white/60">{node.label}</span>
+                  <div className="ml-auto w-1 h-1 rounded-full bg-white/20" />
+                </div>
+              ))}
             </div>
 
 
@@ -720,6 +825,15 @@ export default function App() {
                           <span className="text-[11px] font-mono text-blue-400 uppercase tracking-[0.3em] font-bold">{workerStatus}</span>
                         </div>
                       </div>
+                      
+                      {/* Sub-agent "Worker" message */}
+                      <motion.div 
+                        animate={{ opacity: [0.4, 1, 0.4] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="text-[9px] font-mono text-white/40 uppercase tracking-widest"
+                      >
+                        Analyzing neural stream...
+                      </motion.div>
                     </motion.div>
                   )}
                 </AnimatePresence>

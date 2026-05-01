@@ -11,7 +11,7 @@ interface ParticleSphereProps {
 function ParticleSphere({ isSpeaking, isListening }: ParticleSphereProps) {
   const points = useRef<THREE.Points>(null);
 
-  const particlesCount = 400;
+  const particlesCount = 800;
   const [positions, colors] = useMemo(() => {
     const positions = new Float32Array(particlesCount * 3);
     const colors = new Float32Array(particlesCount * 3);
