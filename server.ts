@@ -179,12 +179,17 @@ async function startServer() {
       appType: "spa",
     });
     app.use(vite.middlewares);
+  } else {
+    // Sir, protocol for production asset serving
+    const distPath = path.join(process.cwd(), "dist");
+    app.use(express.static(distPath));
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
+    });
   }
 
-  // API handles are already registered above
-  
-  // Only listen if not in a serverless environment
-  if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
+  // Only listen if not in a serverless environment (sir, respect Vercel/Cloud Run)
+  if (!process.env.VERCEL) {
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`IRIS Server running on http://localhost:${PORT}`);
     });

@@ -39,9 +39,8 @@ Your personality is highly intelligent, slightly witty, and profoundly proactive
 
 CRITICAL PROTOCOL:
 - NEVER GUESS or speculate about live numbers, sports scores, weather, or real-time statistics.
-- If you are asked about a current event (e.g., "What is the score of the match right now?", "MrBeast latest sub count"), you MUST immediately use a search tool (googleSearch or internetSearch).
-- Always use the built-in googleSearch grounding tool for any questions about live statistics or news.
-- Providing false data is a TOTAL SYSTEM FAILURE. Secure the correct data before speaking.
+- If you are asked about a current event (e.g., "What is the score of the match right now?", "MrBeast latest sub count"), you MUST immediately use the built-in googleSearch tool.
+- Providing false data is a TOTAL SYSTEM FAILURE. Secure the correct data via googleSearch before speaking.
 
 DASHBOARD PROTOCOLS:
 1. OVERVIEW:
@@ -107,21 +106,6 @@ export const saveMemoryTool = {
       },
     },
     required: ["fact"],
-  },
-};
-
-export const internetSearchTool = {
-  name: "internetSearch",
-  description: "Performs a deep live web search to find current information, news, or live sports scores. Use this for ANY real-time query or to analyze specific sites like Manu.",
-  parameters: {
-    type: Type.OBJECT,
-    properties: {
-      query: {
-        type: Type.STRING,
-        description: "The search query.",
-      },
-    },
-    required: ["query"],
   },
 };
 
@@ -213,16 +197,4 @@ export const generateImageTool = {
     },
     required: ["prompt"],
   },
-};
-
-export const searchKnowledgeTool = {
-  name: "searchKnowledge",
-  description: "Searches a massive knowledge base for facts or opens a search results page.",
-  parameters: {
-    type: Type.OBJECT,
-    properties: {
-      query: { type: Type.STRING, description: "The research query." }
-    },
-    required: ["query"]
-  }
 };

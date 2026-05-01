@@ -6,7 +6,7 @@ import { AudioStreamer } from "./lib/audio";
 import { Waveform } from "./components/Waveform";
 import { IrisCore } from "./components/IrisCore";
 import { SatelliteFeed } from "./components/SatelliteFeed";
-import { JARVIS_CONFIG, ConnectionState, InteractionState, LANGUAGES, getJarvisInstruction, saveMemoryTool, internetSearchTool, manageTasksTool, searchYouTubeTool, openAppTool, printNewsTool, searchKnowledgeTool } from "./constants";
+import { JARVIS_CONFIG, ConnectionState, InteractionState, LANGUAGES, getJarvisInstruction, saveMemoryTool, manageTasksTool, searchYouTubeTool, openAppTool, printNewsTool } from "./constants";
 
 const openWebsiteTool = {
   name: "openWebsite",
@@ -209,9 +209,8 @@ export default function App() {
           systemInstruction: getJarvisInstruction(selectedLanguage.label, memoryString),
           tools: [
             { googleSearch: {} } as any,
-            { functionDeclarations: [saveMemoryTool, internetSearchTool, manageTasksTool, searchYouTubeTool, openAppTool, printNewsTool, searchKnowledgeTool, openWebsiteTool] }
+            { functionDeclarations: [saveMemoryTool, manageTasksTool, searchYouTubeTool, openAppTool, printNewsTool, openWebsiteTool] }
           ],
-          toolConfig: { includeServerSideToolInvocations: true } as any,
         } as any,
         callbacks: {
           onopen: () => {
@@ -306,25 +305,6 @@ export default function App() {
                     name: call.name,
                     id: call.id,
                     response: { result: "Website opened successfully." },
-                  });
-                } else if (call.name === "internetSearch" || call.name === "searchKnowledge") {
-                  const queryText = (call.args as any).query;
-                  setIsSearching(true);
-                  setActiveSearch(queryText);
-                  
-                  // Mocking the search API response for the agent to summarize
-                  // In a real scenario, this would call a search API
-                  const results = [
-                    { title: `Latest on ${queryText}`, snippet: "Information retrieved from global nodes..." },
-                    { title: "Node Analysis", snippet: "Summarizing key findings for IRIS core..." }
-                  ];
-
-                  setTimeout(() => setIsSearching(false), 2000);
-
-                  functionResponses.push({
-                    name: call.name,
-                    id: call.id,
-                    response: { searchResults: results },
                   });
                 } else if (call.name === "manageTasks") {
                   const { action, taskData } = call.args as any;
@@ -511,7 +491,7 @@ export default function App() {
           systemInstruction: getJarvisInstruction(selectedLanguage.label, memoryString),
           tools: [
             { googleSearch: {} } as any,
-            { functionDeclarations: [saveMemoryTool, internetSearchTool, manageTasksTool, searchYouTubeTool, openAppTool, printNewsTool, searchKnowledgeTool, openWebsiteTool] }
+            { functionDeclarations: [saveMemoryTool, manageTasksTool, searchYouTubeTool, openAppTool, printNewsTool, openWebsiteTool] }
           ]
         } as any
       });
