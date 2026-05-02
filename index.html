@@ -5,27 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>IRIS - Stark Systems OS</title>
   </head>
+
   <body>
-    <!-- 
-      Sir, the 'root' div is the mounting point for the entire neural interface.
-      All React components are injected here by the main entry script.
-    -->
     <div id="root"></div>
 
-    <!-- 
-      Entry point for the React application. 
-      Vite uses this script tag as the root of the dependency graph.
-      Adding 'type="module"' is required for modern ES module support.
-    -->
     <script type="module" src="/src/main.tsx"></script>
-    
+
     <script>
-      // Global fallback to catch initialization errors and prevent blank screens
       window.onerror = function(message, source, lineno, colno, error) {
-        console.error("CRITICAL SYSTEM FAILURE:", message, at `${source}:${lineno}`);
+        console.error(
+          "CRITICAL SYSTEM FAILURE:",
+          message,
+          `${source}:${lineno}`
+        );
         return false;
       };
     </script>
   </body>
 </html>
-
