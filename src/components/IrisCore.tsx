@@ -1,48 +1,48 @@
 import React, { useRef, useMemo, useState, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import * as THREE from "three";
-import { motion } from "motion/react";
+import { Color, AdditiveBlending, MathUtils, Points as ThreePoints } from "three";
 
 interface ParticleSphereProps {
   isSpeaking: boolean;
   isListening: boolean;
 }
 
+const PARTICLES_COUNT = 800;
+const COLOR_1 = new Color("#3b82f6"); // Blue
+const COLOR_2 = new Color("#fbbf24"); // Yellow/Amber
+
 function ParticleSphere({ isSpeaking, isListening }: ParticleSphereProps) {
-  const points = useRef<THREE.Points>(null);
+  const points = useRef<ThreePoints>(null);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     setIsReady(true);
   }, []);
 
-  const particlesCount = 800;
   const [positions, colors] = useMemo(() => {
     if (typeof window === "undefined") return [new Float32Array(0), new Float32Array(0)];
     
     try {
-      const positions = new Float32Array(particlesCount * 3);
-      const colors = new Float32Array(particlesCount * 3);
-      const color1 = new THREE.Color("#3b82f6"); // Blue
-      const color2 = new THREE.Color("#fbbf24"); // Yellow/Amber
+      const positionsArr = new Float32Array(PARTICLES_COUNT * 3);
+      const colorsArr = new Float32Array(PARTICLES_COUNT * 3);
 
-      for (let i = 0; i < particlesCount; i++) {
+      for (let i = 0; i < PARTICLES_COUNT; i++) {
         const theta = Math.random() * Math.PI * 2;
         const phi = Math.random() * Math.PI;
         const r = 1.8 + Math.random() * 0.2;
 
-        positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-        positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-        positions[i * 3 + 2] = r * Math.cos(phi);
+        positionsArr[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+        positionsArr[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+        positionsArr[i * 3 + 2] = r * Math.cos(phi);
 
-        const mixedColor = Math.random() > 0.5 ? color1 : color2;
-        colors[i * 3] = mixedColor.r;
-        colors[i * 3 + 1] = mixedColor.g;
-        colors[i * 3 + 2] = mixedColor.b;
+        const mixedColor = Math.random() > 0.5 ? COLOR_1 : COLOR_2;
+        colorsArr[i * 3] = mixedColor.r;
+        colorsArr[i * 3 + 1] = mixedColor.g;
+        colorsArr[i * 3 + 2] = mixedColor.b;
       }
-      return [positions, colors];
+      return [positionsArr, colorsArr];
     } catch (e) {
-      console.error("Failed to initialize particles", e);
+      console.error("Neural Core initialization failed", e);
       return [new Float32Array(0), new Float32Array(0)];
     }
   }, []);
@@ -50,33 +50,37 @@ function ParticleSphere({ isSpeaking, isListening }: ParticleSphereProps) {
   useFrame((state) => {
     if (!isReady || !points.current) return;
     
-    const time = state.clock.getElapsedTime();
-    points.current.rotation.y = time * 0.2;
-    points.current.rotation.x = time * 0.1;
+    try {
+      const time = state.clock.getElapsedTime();
+      points.current.rotation.y = time * 0.2;
+      points.current.rotation.x = time * 0.1;
 
-    const scale = isSpeaking 
-      ? 1 + Math.sin(time * 10) * 0.05 
-      : isListening 
-      ? 1 + Math.sin(time * 2) * 0.02 
-      : 1;
-    
-    points.current.scale.set(scale, scale, scale);
+      const scale = isSpeaking 
+        ? 1 + Math.sin(time * 10) * 0.05 
+        : isListening 
+        ? 1 + Math.sin(time * 2) * 0.02 
+        : 1;
+      
+      points.current.scale.set(scale, scale, scale);
+    } catch (e) {
+      // Silent fail to prevent crash loop in frame loop
+    }
   });
 
-  if (!isReady) return null;
+  if (!isReady || positions.length === 0) return null;
 
   return (
     <points ref={points}>
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
-          count={particlesCount}
+          count={PARTICLES_COUNT}
           array={positions}
           itemSize={3}
         />
         <bufferAttribute
           attach="attributes-color"
-          count={particlesCount}
+          count={PARTICLES_COUNT}
           array={colors}
           itemSize={3}
         />
@@ -86,8 +90,8 @@ function ParticleSphere({ isSpeaking, isListening }: ParticleSphereProps) {
         vertexColors
         transparent
         opacity={0.8}
-        sizeAttenuation
-        blending={THREE.AdditiveBlending}
+        sizeAttenuation={true}
+        blending={AdditiveBlending}
       />
     </points>
   );
