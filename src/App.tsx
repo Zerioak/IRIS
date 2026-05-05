@@ -230,6 +230,8 @@ export default function App() {
   }, []);
 
   const connect = useCallback(async () => {
+    if (connectionStatus !== "disconnected") return;
+
     try {
       setConnectionStatus("connecting");
       setError(null);
@@ -249,8 +251,10 @@ export default function App() {
         console.error("Failed to fetch cloud memories", e);
       }
 
-      const ai = new GoogleGenAI({ apiKey });
-      (ai as any).apiVersion = "v1beta";
+      const ai = new GoogleGenAI({ 
+        apiKey,
+        apiVersion: "v1beta"
+      } as any);
       
       audioStreamerRef.current = new AudioStreamer(24000);
       await audioStreamerRef.current.initialize();
@@ -271,6 +275,7 @@ export default function App() {
         } as any,
         callbacks: {
           onopen: () => {
+            console.log("IRIS: Neural uplink established.");
             setConnectionStatus("connected");
             setInteractionStatus("listening");
             audioStreamerRef.current?.startRecording((base64) => {
@@ -471,6 +476,7 @@ export default function App() {
             disconnect();
           },
           onclose: () => {
+            console.log("IRIS: Neural uplink closed.");
             setConnectionStatus("disconnected");
             setInteractionStatus("idle");
           },
@@ -483,7 +489,7 @@ export default function App() {
       setError({ message: "Failed to initialize." });
       setConnectionStatus("disconnected");
     }
-  }, [memories, selectedLanguage, disconnect]);
+  }, [memories, selectedLanguage, disconnect, connectionStatus]);
 
   const openInNewTab = () => {
     window.open(window.location.href, "_blank");
@@ -893,14 +899,20 @@ export default function App() {
                   
                   <div className="flex gap-4 w-full justify-center">
                     <button 
-                      onClick={connectionStatus === "connected" ? disconnect : connect}
+                      onClick={() => {
+                        if (connectionStatus === "connected") disconnect();
+                        else if (connectionStatus === "disconnected") connect();
+                      }}
+                      disabled={connectionStatus === "connecting"}
                       className={`px-12 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] transition-all shadow-lg ${
                         connectionStatus === "connected" 
                           ? "bg-red-950/40 text-red-500 border border-red-500/30 hover:bg-red-500 hover:text-white" 
+                          : connectionStatus === "connecting"
+                          ? "bg-blue-600/10 text-blue-400/50 border border-blue-500/10 cursor-not-allowed"
                           : "bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600 hover:text-white shadow-[0_0_20px_rgba(59,130,246,0.3)]"
                       }`}
                     >
-                      {connectionStatus === "connected" ? "Terminate" : "Initialize"}
+                      {connectionStatus === "connected" ? "Terminate" : connectionStatus === "connecting" ? "Linking..." : "Initialize"}
                     </button>
                     
                     <button 
