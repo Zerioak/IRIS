@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsx server.ts",
     "build": "vite build",
+    "vercel-build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"
@@ -28,6 +29,10 @@
     "react-simple-maps": "^3.0.0",
     "three": "^0.166.1",
     "vite": "^6.2.0"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "4.34.8",
+    "@rollup/rollup-linux-x64-musl": "4.34.8"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
