@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Globe, Crosshair, Radar, Shield } from "lucide-react";
 
 export const SatelliteFeed: React.FC = () => {

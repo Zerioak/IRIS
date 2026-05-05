@@ -28,8 +28,8 @@ export interface LiveSessionConfig {
 }
 
 export const JARVIS_CONFIG: LiveSessionConfig = {
-  liveModel: "gemini-2.0-flash-exp",
-  chatModel: "gemini-2.0-flash-exp",
+  liveModel: "gemini-3.1-flash-live-preview",
+  chatModel: "gemini-3-flash-preview",
   voiceName: "Charon",
 };
 

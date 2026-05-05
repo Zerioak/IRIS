@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface WaveformProps {
   isSpeaking: boolean;

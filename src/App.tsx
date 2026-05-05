@@ -1,7 +1,28 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { GoogleGenAI, LiveServerMessage, Modality, Type } from "@google/genai";
-import { Mic, Loader2, AlertCircle, Video, VideoOff, MessageSquare, PhoneOff, ChevronDown, Languages, RefreshCw, X, Monitor, MonitorOff, Globe, Newspaper, Zap, Cpu, Database, Settings, Power, Activity, Terminal, ShieldAlert, Layers, Map as MapIcon, Plus, Trash2, History } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { 
+  Mic, 
+  Loader2, 
+  Video, 
+  MessageSquare, 
+  RefreshCw, 
+  Monitor, 
+  Globe, 
+  Newspaper, 
+  Zap, 
+  Cpu, 
+  Database, 
+  Settings, 
+  Terminal, 
+  ShieldAlert, 
+  Layers, 
+  Plus, 
+  Trash2,
+  Activity
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { CONFIG, getApiKey } from "./config";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { AudioStreamer } from "./lib/audio";
 import { Waveform } from "./components/Waveform";
 import { IrisCore } from "./components/IrisCore";
@@ -40,6 +61,26 @@ export default function App() {
 
   useEffect(() => {
     setIsClient(true);
+    console.log("IRIS CORE: Initializing Neural Interface...");
+    console.log("Environment Detection:", {
+      isDev: import.meta.env.DEV,
+      mode: import.meta.env.MODE,
+      client: typeof window !== "undefined"
+    });
+
+    const checkConnectivity = () => {
+      if (!navigator.onLine) {
+        console.warn("IRIS: System Offline detected.");
+        setError({ message: "Network connection lost. Sir, check your uplink." });
+      }
+    };
+
+    window.addEventListener('online', checkConnectivity);
+    window.addEventListener('offline', checkConnectivity);
+    return () => {
+      window.removeEventListener('online', checkConnectivity);
+      window.removeEventListener('offline', checkConnectivity);
+    };
   }, []);
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
@@ -161,6 +202,14 @@ export default function App() {
     setLogs(prev => [{ type, message, timestamp: Date.now() }, ...prev].slice(0, 50));
   };
 
+  const getApiKey = () => {
+    const key = (typeof process !== "undefined" ? process.env?.GEMINI_API_KEY : null) || 
+                import.meta.env.VITE_GEMINI_API_KEY || 
+                CONFIG.GEMINI.API_KEY;
+    console.log("IRIS: API Key check complete.", key ? "Key present." : "Key MISSING.");
+    return key;
+  };
+
   const disconnect = useCallback(() => {
     sessionRef.current?.close();
     audioStreamerRef.current?.stopRecording();
@@ -182,9 +231,9 @@ export default function App() {
       setConnectionStatus("connecting");
       setError(null);
 
-      const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || (typeof process !== "undefined" ? process.env?.GEMINI_API_KEY : null);
+      const apiKey = getApiKey();
       if (!apiKey) {
-        throw new Error("API Key is missing.");
+        throw new Error("API Key is missing. Sir, ensure VITE_GEMINI_API_KEY is configured.");
       }
 
       // Fetch long-term memories from Cloud Matrix (Backend API)
@@ -198,6 +247,7 @@ export default function App() {
       }
 
       const ai = new GoogleGenAI({ apiKey });
+      (ai as any).apiVersion = "v1beta";
       
       audioStreamerRef.current = new AudioStreamer(24000);
       await audioStreamerRef.current.initialize();
@@ -464,10 +514,11 @@ export default function App() {
     addLog("user", "Instruction received: " + userText.substring(0, 30) + "...");
 
     try {
-      const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || (typeof process !== "undefined" ? process.env?.GEMINI_API_KEY : null);
-      if (!apiKey) throw new Error("API Key missing");
+      const apiKey = getApiKey();
+      if (!apiKey) throw new Error("API Key missing. Sir, check environment variables.");
       
       const ai = new GoogleGenAI({ apiKey });
+      (ai as any).apiVersion = "v1beta";
       
       // Fetch memories for context (same as voice)
       let cloudText = "";

@@ -10,6 +10,19 @@ export default defineConfig(({mode}) => {
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
     },
+    build: {
+      outDir: 'dist',
+      sourcemap: mode === 'development',
+      minify: 'esbuild',
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom', 'framer-motion'],
+            three: ['three', '@react-three/fiber', '@react-three/drei'],
+          },
+        },
+      },
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
