@@ -18,7 +18,8 @@ import {
   Layers, 
   Plus, 
   Trash2,
-  Activity
+  Activity,
+  Camera
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CONFIG, getApiKey } from "./config";
@@ -27,6 +28,7 @@ import { AudioStreamer } from "./lib/audio";
 import { Waveform } from "./components/Waveform";
 import { IrisCore } from "./components/IrisCore";
 import { SatelliteFeed } from "./components/SatelliteFeed";
+import { CameraBox } from "./components/CameraBox";
 import { JARVIS_CONFIG, ConnectionState, InteractionState, LANGUAGES, getJarvisInstruction, saveMemoryTool, manageTasksTool, searchYouTubeTool, openAppTool, printNewsTool } from "./constants";
 
 const openWebsiteTool = {
@@ -58,6 +60,7 @@ export default function App() {
   const [selectedLanguage, setSelectedLanguage] = useState(LANGUAGES[0]);
   const [memories, setMemories] = useState<string[]>([]);
   const [error, setError] = useState<{ message: string; type?: "screen-share" } | null>(null);
+  const [showIrisVision, setShowIrisVision] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -372,23 +375,7 @@ export default function App() {
                     });
                     result = "Task created and synced with Stark Cloud.";
                     
-                    if (taskData.emailReminder) {
-                      try {
-                        await fetch("/api/send-email", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({
-                            title: taskData.title,
-                            description: taskData.description || "No description",
-                            dueDate: taskData.dueDate
-                          })
-                        });
-                        result += " Reminder system engaged.";
-                      } catch (e) {
-                        console.error("Email send failed", e);
-                        result += " (Note: Alert system delayed).";
-                      }
-                    }
+                    // SIR: Email reminder subsystem decommissioned to lower overhead.
                   } else if (action === "list") {
                     const res = await fetch("/api/tasks");
                     const taskList = await res.json();
@@ -719,6 +706,13 @@ export default function App() {
       {/* Main Grid Layout */}
       <main className="flex-1 flex flex-col lg:grid lg:grid-cols-[300px_1fr_400px] lg:grid-rows-[1fr_400px] gap-4 p-4 z-10 overflow-y-auto lg:overflow-hidden">
         
+        {/* IRIS Vision Component */}
+        {showIrisVision && (
+          <CameraBox 
+            onClose={() => setShowIrisVision(false)} 
+          />
+        )}
+        
         {/* Left Column: Media & Sat-Link */}
         <div className="flex flex-col gap-4 order-2 lg:order-1">
           {/* Media Link Panel */}
@@ -829,9 +823,14 @@ export default function App() {
                 { id: "mem", icon: Database, label: "Memory", color: "text-emerald-500", border: "border-emerald-500/20" },
                 { id: "soul", icon: Zap, label: "Soul", color: "text-purple-400", border: "border-purple-400/20" },
                 { id: "skills", icon: Cpu, label: "Skills", color: "text-blue-400", border: "border-blue-400/20" },
-                { id: "set", icon: Settings, label: "Settings", color: "text-rose-500", border: "border-rose-500/20" }
+                { id: "set", icon: Settings, label: "Settings", color: "text-rose-500", border: "border-rose-500/20" },
+                { id: "vision", icon: Camera, label: "Vision", color: "text-cyan-400", border: "border-cyan-400/20", onClick: () => setShowIrisVision(!showIrisVision) }
               ].map((node) => (
-                <div key={node.id} className={`flex-shrink-0 w-[140px] md:w-[160px] h-12 bg-black/40 border ${node.border} rounded-xl flex items-center gap-3 px-4 backdrop-blur-xl transition-all shadow-sm shadow-black/20`}>
+                <div 
+                  key={node.id} 
+                  onClick={(node as any).onClick}
+                  className={`flex-shrink-0 w-[140px] md:w-[160px] h-12 bg-black/40 border ${node.border} rounded-xl flex items-center gap-3 px-4 backdrop-blur-xl transition-all shadow-sm shadow-black/20 ${(node as any).onClick ? "cursor-pointer hover:bg-white/5 active:scale-95" : ""}`}
+                >
                   <node.icon className={`w-4 h-4 ${node.color}`} />
                   <span className="text-[9px] font-mono uppercase tracking-widest text-white/60">{node.label}</span>
                   <div className="ml-auto w-1 h-1 rounded-full bg-white/20" />
